@@ -213,4 +213,51 @@ router.delete("/users/:id", authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
+// PUT /auth/upgrade-to-pro - Self-upgrade to Pro plan
+router.put("/upgrade-to-pro", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    // Check if user is already Pro or Admin
+    if (user.role === 'Pro' || user.role === 'Admin') {
+      return res.status(400).json({ msg: "User is already on Pro plan or higher" });
+    }
+
+    // Upgrade user to Pro
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { role: 'Pro' },
+      { new: true, select: '-password' }
+    );
+
+    // Generate new JWT token with updated role
+    const token = jwt.sign(
+      { id: updatedUser._id, tenantId: updatedUser.tenantId, role: updatedUser.role },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "1h" }
+    );
+
+    res.json({
+      msg: "Successfully upgraded to Pro plan!",
+      token,
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        tenantId: updatedUser.tenantId,
+        role: updatedUser.role
+      }
+    });
+  } catch (err) {
+    console.error("❌ Upgrade to Pro error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
 export default router;

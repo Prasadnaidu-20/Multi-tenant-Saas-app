@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Note from '../models/Note';
+import User from '../models/User';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 import { Response } from 'express';
 
@@ -35,19 +36,78 @@ router.get('/info', (req, res) => {
 });
 
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
-  const newNote = new Note({
-    title: req.body.title,
-    content: req.body.content,
-    tenantId: req.user!.tenantId,
-    createdBy: req.user!.id,
-  });
-  await newNote.save();
-  res.status(201).json(newNote);
+  try {
+    // Get user details to check plan
+    const user = await User.findById(req.user!.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check plan limits
+    if (user.role === 'Member') { // Free plan
+      const noteCount = await Note.countDocuments({ 
+        tenantId: req.user!.tenantId,
+        createdBy: req.user!.id 
+      });
+      
+      if (noteCount >= 3) {
+        return res.status(403).json({ 
+          message: 'Free plan limit reached. You can only create 3 notes. Upgrade to Pro for unlimited notes.',
+          plan: 'Free',
+          limit: 3,
+          current: noteCount
+        });
+      }
+    }
+
+    const newNote = new Note({
+      title: req.body.title,
+      content: req.body.content,
+      tenantId: req.user!.tenantId,
+      createdBy: req.user!.id,
+    });
+    
+    await newNote.save();
+    res.status(201).json(newNote);
+  } catch (error) {
+    console.error('Error creating note:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
-  const notes = await Note.find({ tenantId: req.user!.tenantId });
-  res.json(notes);
+  try {
+    // Get user details to check plan
+    const user = await User.findById(req.user!.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const notes = await Note.find({ 
+      tenantId: req.user!.tenantId
+    }).populate('createdBy', 'name email');
+    
+    // Count only user's own notes for plan limits
+    const userNoteCount = await Note.countDocuments({ 
+      tenantId: req.user!.tenantId,
+      createdBy: req.user!.id 
+    });
+    const plan = user.role === 'Member' ? 'Free' : 'Pro';
+    const limit = user.role === 'Member' ? 3 : 'unlimited';
+    
+    res.json({
+      notes,
+      planInfo: {
+        plan,
+        limit,
+        current: userNoteCount,
+        remaining: user.role === 'Member' ? Math.max(0, 3 - userNoteCount) : 'unlimited'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {

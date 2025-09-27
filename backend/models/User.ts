@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true },
   password: { type: String, required: true },
   tenantId: { type: String, required: true }, // For multi-tenancy
-  role: { type: String, enum: ['Admin', 'Member'], default: 'Member' }
+  role: { type: String, enum: ['Admin', 'Member', 'Pro'], default: 'Member' }
 });
 
 export default mongoose.model('User', userSchema);
