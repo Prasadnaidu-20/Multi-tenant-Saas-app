@@ -18,6 +18,7 @@ const createUser = async () => {
       email: "admin@acme.test",
       password: "password",
       tenantId: "Acme",
+      role: "Admin",
     };
 
     // 3️⃣ Hash password
