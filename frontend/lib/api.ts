@@ -3,7 +3,7 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:500
 
 interface ApiOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE";
-  body?: any;
+  body?: Record<string, unknown>;
   token?: string;
 }
 

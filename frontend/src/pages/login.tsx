@@ -3,13 +3,6 @@ import { useRouter } from "next/router";
 import { login } from "../../lib/auth";
 import { Eye, EyeOff, Building2, Mail, Lock, Loader2, ArrowRight, Shield, AlertCircle } from "lucide-react";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  tenantId: string;
-  role: "Admin" | "Member";
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,8 +40,8 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      setError(err.message || "Login failed");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }

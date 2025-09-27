@@ -16,11 +16,7 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
-  CheckCircle,
-  Clock,
-  Sparkles,
-  Eye,
-  MoreHorizontal
+  Clock
 } from 'lucide-react';
 
 const NotesPage = () => {
@@ -49,7 +45,7 @@ const NotesPage = () => {
   const [error, setError] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editForm, setEditForm] = useState({ title: '', content: '' });
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string; email: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [isVisible, setIsVisible] = useState(false);
@@ -95,8 +91,8 @@ const NotesPage = () => {
       const data = await res.json();
       setNotes(data.notes);
       setPlanInfo(data.planInfo);
-    } catch (error) {
-      console.error('Error fetching notes:', error);
+    } catch {
+      console.error('Error fetching notes');
     } finally {
       setLoading(false);
     }
@@ -129,7 +125,7 @@ const NotesPage = () => {
         const errorData = await res.json();
         setError(errorData.message);
       }
-    } catch (error) {
+    } catch {
       setError('Failed to create note');
     }
   };

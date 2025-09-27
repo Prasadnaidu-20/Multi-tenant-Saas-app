@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ChevronRight, Shield, Users, Zap, CheckCircle, ArrowRight } from "lucide-react";
+import { ChevronRight, Shield, Users, Zap, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -37,7 +37,7 @@ export default function LandingPage() {
               <span className="text-indigo-400">SaaS Platform</span>
             </h1>
             <p className="text-xl lg:text-2xl mb-10 text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Enterprise-grade security meets intuitive design. Keep your company's data private, organized, and accessible with our premium multi-tenant solution.
+              Enterprise-grade security meets intuitive design. Keep your company&apos;s data private, organized, and accessible with our premium multi-tenant solution.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/login">
