@@ -1,18 +1,19 @@
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import User from "../models/User";
-import Invitation from "../models/Invitation";
-import { authMiddleware, AuthRequest } from "../middleware/authMiddleware";
+import User from "../models/User.js";
+import Invitation from "../models/Invitation.js";
+import { authMiddleware, AuthRequest } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
 // POST /admin/invite - Send invitation to user (Admin only)
-router.post("/invite", authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post("/invite", authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if current user is admin
     if (req.user!.role !== 'Admin') {
-      return res.status(403).json({ msg: "Only admins can send invitations" });
+      res.status(403).json({ msg: "Only admins can send invitations" });
+      return;
     }
 
     const { email, role = 'Member' } = req.body;
@@ -21,13 +22,15 @@ router.post("/invite", authMiddleware, async (req: AuthRequest, res: Response) =
 
     // Validate email
     if (!email || !email.includes('@')) {
-      return res.status(400).json({ msg: "Valid email is required" });
+      res.status(400).json({ msg: "Valid email is required" });
+      return;
     }
 
     // Check if user already exists in this tenant
     const existingUser = await User.findOne({ email, tenantId });
     if (existingUser) {
-      return res.status(400).json({ msg: "User already exists in this tenant" });
+      res.status(400).json({ msg: "User already exists in this tenant" });
+      return;
     }
 
     // Check if there's already a pending invitation
@@ -37,7 +40,8 @@ router.post("/invite", authMiddleware, async (req: AuthRequest, res: Response) =
       status: 'pending' 
     });
     if (existingInvitation) {
-      return res.status(400).json({ msg: "Invitation already sent to this email" });
+      res.status(400).json({ msg: "Invitation already sent to this email" });
+      return;
     }
 
     // Generate invitation token
@@ -81,11 +85,12 @@ router.post("/invite", authMiddleware, async (req: AuthRequest, res: Response) =
 });
 
 // GET /admin/invitations - Get all invitations for tenant (Admin only)
-router.get("/invitations", authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get("/invitations", authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if current user is admin
     if (req.user!.role !== 'Admin') {
-      return res.status(403).json({ msg: "Only admins can view invitations" });
+      res.status(403).json({ msg: "Only admins can view invitations" });
+      return;
     }
 
     const invitations = await Invitation.find({ tenantId: req.user!.tenantId })
@@ -103,7 +108,7 @@ router.get("/invitations", authMiddleware, async (req: AuthRequest, res: Respons
 });
 
 // GET /admin/invite/accept/:token - Accept invitation
-router.get("/invite/accept/:token", async (req: Request, res: Response) => {
+router.get("/invite/accept/:token", async (req: Request, res: Response): Promise<void> => {
   try {
     const { token } = req.params;
 
@@ -114,14 +119,16 @@ router.get("/invite/accept/:token", async (req: Request, res: Response) => {
     }).populate('invitedBy', 'name email');
 
     if (!invitation) {
-      return res.status(404).json({ msg: "Invalid or expired invitation" });
+      res.status(404).json({ msg: "Invalid or expired invitation" });
+      return;
     }
 
     // Check if invitation is expired
     if (new Date() > invitation.expiresAt) {
       invitation.status = 'expired';
       await invitation.save();
-      return res.status(400).json({ msg: "Invitation has expired" });
+      res.status(400).json({ msg: "Invitation has expired" });
+      return;
     }
 
     res.json({
@@ -140,7 +147,7 @@ router.get("/invite/accept/:token", async (req: Request, res: Response) => {
 });
 
 // POST /admin/invite/accept/:token - Complete invitation acceptance
-router.post("/invite/accept/:token", async (req: Request, res: Response) => {
+router.post("/invite/accept/:token", async (req: Request, res: Response): Promise<void> => {
   try {
     const { token } = req.params;
     const { name, password } = req.body;
@@ -152,14 +159,16 @@ router.post("/invite/accept/:token", async (req: Request, res: Response) => {
     });
 
     if (!invitation) {
-      return res.status(404).json({ msg: "Invalid or expired invitation" });
+      res.status(404).json({ msg: "Invalid or expired invitation" });
+      return;
     }
 
     // Check if invitation is expired
     if (new Date() > invitation.expiresAt) {
       invitation.status = 'expired';
       await invitation.save();
-      return res.status(400).json({ msg: "Invitation has expired" });
+      res.status(400).json({ msg: "Invitation has expired" });
+      return;
     }
 
     // Check if user already exists
@@ -168,7 +177,8 @@ router.post("/invite/accept/:token", async (req: Request, res: Response) => {
       tenantId: invitation.tenantId 
     });
     if (existingUser) {
-      return res.status(400).json({ msg: "User already exists" });
+      res.status(400).json({ msg: "User already exists" });
+      return;
     }
 
     // Hash password

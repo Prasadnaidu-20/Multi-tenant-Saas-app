@@ -10,13 +10,12 @@ export interface AuthRequest extends Request {
   };
 }
 
-export interface AuthRequest extends Request {
-  user?: { id: string; tenantId: string; role: string };
-}
-
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ message: 'No token provided' });
+  if (!token) {
+    res.status(401).json({ message: 'No token provided' });
+    return;
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);

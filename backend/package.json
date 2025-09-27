@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "main": "server.ts",
   "type": "module",
+
   "scripts": {
-    "start": "node server.ts",
-    "dev": "tsx watch server.ts",
-    "build": "echo \"No build step required for Node.js\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "build": "tsc",
+  "start": "node dist/server.js",
+  "dev": "tsx watch server.ts",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+
   "keywords": [],
   "author": "",
   "license": "ISC",

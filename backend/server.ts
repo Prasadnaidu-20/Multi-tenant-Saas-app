@@ -2,9 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
-import noteRoutes from './routes/noteRoutes';
-import adminRoutes from './routes/admin';
+import authRoutes from './routes/auth.js';
+import noteRoutes from './routes/noteRoutes.js';
+import adminRoutes from './routes/admin.js';
 
 
 

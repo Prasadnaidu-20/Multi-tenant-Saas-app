@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import Note from '../models/Note';
-import User from '../models/User';
-import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
+import Note from '../models/Note.js';
+import User from '../models/User.js';
+import { authMiddleware, AuthRequest } from '../middleware/authMiddleware.js';
 import { Response } from 'express';
 
 const router = Router();
@@ -35,12 +35,13 @@ router.get('/info', (req, res) => {
   });
 });
 
-router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Get user details to check plan
     const user = await User.findById(req.user!.id);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
+      return;
     }
 
     // Check plan limits
@@ -51,12 +52,13 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       });
       
       if (noteCount >= 3) {
-        return res.status(403).json({ 
+        res.status(403).json({ 
           message: 'Free plan limit reached. You can only create 3 notes. Upgrade to Pro for unlimited notes.',
           plan: 'Free',
           limit: 3,
           current: noteCount
         });
+        return;
       }
     }
 
@@ -75,12 +77,13 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Get user details to check plan
     const user = await User.findById(req.user!.id);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
+      return;
     }
 
     const notes = await Note.find({ 
@@ -110,26 +113,50 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
-  const note = await Note.findOne({ _id: req.params.id, tenantId: req.user!.tenantId });
-  if (!note) return res.status(404).json({ message: 'Note not found' });
-  res.json(note);
+router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const note = await Note.findOne({ _id: req.params.id, tenantId: req.user!.tenantId });
+    if (!note) {
+      res.status(404).json({ message: 'Note not found' });
+      return;
+    }
+    res.json(note);
+  } catch (error) {
+    console.error('Error fetching note:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
-  const note = await Note.findOneAndUpdate(
-    { _id: req.params.id, tenantId: req.user!.tenantId },
-    { title: req.body.title, content: req.body.content },
-    { new: true }
-  );
-  if (!note) return res.status(404).json({ message: 'Note not found' });
-  res.json(note);
+router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const note = await Note.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.user!.tenantId },
+      { title: req.body.title, content: req.body.content },
+      { new: true }
+    );
+    if (!note) {
+      res.status(404).json({ message: 'Note not found' });
+      return;
+    }
+    res.json(note);
+  } catch (error) {
+    console.error('Error updating note:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-router.delete('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
-  const note = await Note.findOneAndDelete({ _id: req.params.id, tenantId: req.user!.tenantId });
-  if (!note) return res.status(404).json({ message: 'Note not found' });
-  res.json({ message: 'Note deleted successfully' });
+router.delete('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const note = await Note.findOneAndDelete({ _id: req.params.id, tenantId: req.user!.tenantId });
+    if (!note) {
+      res.status(404).json({ message: 'Note not found' });
+      return;
+    }
+    res.json({ message: 'Note deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting note:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 export default router;
