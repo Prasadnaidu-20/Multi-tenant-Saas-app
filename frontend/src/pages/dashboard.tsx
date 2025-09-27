@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { getCurrentUser, getToken, logout } from "../../lib/auth";
 import { 
@@ -17,22 +17,16 @@ import {
   CheckCircle, 
   AlertTriangle,
   Sparkles,
-  TrendingUp,
   Activity,
   Clock,
   Save,
   X
 } from "lucide-react";
 
-type Note = {
-  _id: string;
-  title: string;
-  content: string;
-};
 
 const Dashboard = () => {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ name: string; email: string; tenantId: string; role: string; id?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [title, setTitle] = useState('');
@@ -53,24 +47,7 @@ const Dashboard = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  useEffect(() => {
-    console.log("Dashboard component loaded");
-    const token = getToken();
-    const userData = getCurrentUser();
-    
-    if (!token || !userData) {
-      console.log("No token or user data, redirecting to login");
-      router.push("/login");
-      return;
-    }
-
-    console.log("User data found:", userData);
-    setUser(userData);
-    fetchNoteCount();
-    setLoading(false);
-  }, [router]);
-
-  const fetchNoteCount = async () => {
+  const fetchNoteCount = useCallback(async () => {
     try {
       const res = await fetch('http://localhost:5000/api/notes', {
         method: 'GET',
@@ -87,7 +64,24 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching note count:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    console.log("Dashboard component loaded");
+    const token = getToken();
+    const userData = getCurrentUser();
+    
+    if (!token || !userData) {
+      console.log("No token or user data, redirecting to login");
+      router.push("/login");
+      return;
+    }
+
+    console.log("User data found:", userData);
+    setUser(userData);
+    fetchNoteCount();
+    setLoading(false);
+  }, [router, fetchNoteCount]);
 
   const handleLogout = () => {
     logout();
@@ -105,7 +99,7 @@ const Dashboard = () => {
       body: JSON.stringify({ title, content }),
     });
 
-    const newNote = await res.json();
+    await res.json();
     alert('Note created successfully!');
     setTitle('');
     setContent('');
@@ -193,8 +187,8 @@ const Dashboard = () => {
           <div className={`flex justify-between items-center py-6 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className={`w-12 h-12 bg-gradient-to-r ${getPlanColor(user.role)} rounded-2xl flex items-center justify-center`}>
-                  {getPlanIcon(user.role)}
+                <div className={`w-12 h-12 bg-gradient-to-r ${getPlanColor(user?.role || 'Member')} rounded-2xl flex items-center justify-center`}>
+                  {getPlanIcon(user?.role || 'Member')}
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
@@ -207,17 +201,17 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4 mt-3">
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm bg-gradient-to-r ${getPlanColor(user.role)} text-white`}>
-                  {getPlanIcon(user.role)}
-                  {user.role === 'Member' ? 'Free Plan' : `${user.role} Plan`}
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm bg-gradient-to-r ${getPlanColor(user?.role || 'Member')} text-white`}>
+                  {getPlanIcon(user?.role || 'Member')}
+                  {user?.role === 'Member' ? 'Free Plan' : `${user?.role} Plan`}
                 </div>
-                {user.role === 'Member' && (
+                {user?.role === 'Member' && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                     <FileText className="w-4 h-4 text-slate-300" />
                     <span className="text-slate-300 text-sm font-medium">{noteCount}/3 notes used</span>
                   </div>
                 )}
-                {user.role === 'Pro' && (
+                {user?.role === 'Pro' && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 backdrop-blur-sm rounded-xl border border-purple-400/30">
                     <Sparkles className="w-4 h-4 text-purple-300" />
                     <span className="text-purple-300 text-sm font-medium">Unlimited notes</span>
@@ -293,10 +287,10 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-400 text-sm font-medium">Plan Status</p>
-                  <p className="text-xl font-bold text-white mt-1">{user.role === 'Member' ? 'Free' : user.role}</p>
+                  <p className="text-xl font-bold text-white mt-1">{user?.role === 'Member' ? 'Free' : user?.role}</p>
                 </div>
-                <div className={`w-12 h-12 bg-gradient-to-r ${getPlanColor(user.role)} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  {getPlanIcon(user.role)}
+                <div className={`w-12 h-12 bg-gradient-to-r ${getPlanColor(user?.role || 'Member')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  {getPlanIcon(user?.role || 'Member')}
                 </div>
               </div>
             </div>
@@ -305,7 +299,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-400 text-sm font-medium">Organization</p>
-                  <p className="text-xl font-bold text-white mt-1">{user.tenantId}</p>
+                  <p className="text-xl font-bold text-white mt-1">{user?.tenantId}</p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Building2 className="w-6 h-6 text-white" />
@@ -332,8 +326,8 @@ const Dashboard = () => {
             <div className="bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden group hover:border-white/30 transition-all duration-500">
               <div className="p-8">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className={`w-16 h-16 bg-gradient-to-r ${getPlanColor(user.role)} rounded-2xl flex items-center justify-center text-2xl font-bold text-white`}>
-                    {user.name?.charAt(0).toUpperCase()}
+                  <div className={`w-16 h-16 bg-gradient-to-r ${getPlanColor(user?.role || 'Member')} rounded-2xl flex items-center justify-center text-2xl font-bold text-white`}>
+                    {user?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white">Profile Information</h3>
@@ -345,28 +339,28 @@ const Dashboard = () => {
                     <User className="w-5 h-5 text-slate-400" />
                     <div>
                       <p className="text-slate-400 text-sm">Full Name</p>
-                      <p className="text-white font-medium">{user.name}</p>
+                      <p className="text-white font-medium">{user?.name}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
                     <span className="w-5 h-5 text-slate-400">@</span>
                     <div>
                       <p className="text-slate-400 text-sm">Email Address</p>
-                      <p className="text-white font-medium">{user.email}</p>
+                      <p className="text-white font-medium">{user?.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
                     <Building2 className="w-5 h-5 text-slate-400" />
                     <div>
                       <p className="text-slate-400 text-sm">Organization</p>
-                      <p className="text-white font-medium">{user.tenantId}</p>
+                      <p className="text-white font-medium">{user?.tenantId}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
-                    {getPlanIcon(user.role)}
+                    {getPlanIcon(user?.role || 'Member')}
                     <div>
                       <p className="text-slate-400 text-sm">Subscription Plan</p>
-                      <p className="text-white font-medium">{user.role === 'Member' ? 'Free Plan' : `${user.role} Plan`}</p>
+                      <p className="text-white font-medium">{user?.role === 'Member' ? 'Free Plan' : `${user?.role} Plan`}</p>
                     </div>
                   </div>
                 </div>
@@ -392,7 +386,7 @@ const Dashboard = () => {
                       <span className="text-emerald-300 font-medium">Tenant Isolated</span>
                     </div>
                     <p className="text-emerald-200/80 text-sm">
-                      You are securely logged into the <strong>{user.tenantId}</strong> organization. All your data is completely isolated and private.
+                      You are securely logged into the <strong>{user?.tenantId}</strong> organization. All your data is completely isolated and private.
                     </p>
                   </div>
                   <div className="p-4 bg-blue-500/10 border border-blue-400/30 rounded-xl">
@@ -404,14 +398,14 @@ const Dashboard = () => {
                       Your notes and data are protected with enterprise-grade encryption standards.
                     </p>
                   </div>
-                  {user.role === 'Member' && noteCount >= 3 && (
+                  {user?.role === 'Member' && noteCount >= 3 && (
                     <div className="p-4 bg-amber-500/10 border border-amber-400/30 rounded-xl">
                       <div className="flex items-center gap-3 mb-2">
                         <AlertTriangle className="w-5 h-5 text-amber-400" />
                         <span className="text-amber-300 font-medium">Limit Reached</span>
                       </div>
                       <p className="text-amber-200/80 text-sm">
-                        You've reached your free plan limit. Upgrade to Pro for unlimited notes!
+                        You&apos;ve reached your free plan limit. Upgrade to Pro for unlimited notes!
                       </p>
                     </div>
                   )}
@@ -434,9 +428,9 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   <button
                     onClick={() => setShowCreateForm(!showCreateForm)}
-                    disabled={user.role === 'Member' && noteCount >= 3}
+                    disabled={user?.role === 'Member' && noteCount >= 3}
                     className={`group w-full flex items-center gap-3 p-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02] cursor-pointer ${
-                      user.role === 'Member' && noteCount >= 3
+                      user?.role === 'Member' && noteCount >= 3
                         ? 'bg-slate-600/30 text-slate-500 cursor-not-allowed border border-slate-600/30'
                         : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white border border-indigo-400/50 hover:shadow-xl'
                     }`}
