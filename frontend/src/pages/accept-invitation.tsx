@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 
 interface InvitationData {
@@ -26,13 +26,7 @@ export default function AcceptInvitation() {
     confirmPassword: ""
   });
 
-  useEffect(() => {
-    if (token) {
-      validateInvitation();
-    }
-  }, [token]);
-
-  const validateInvitation = async () => {
+  const validateInvitation = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:5000/api/admin/invite/accept/${token}`);
       
@@ -43,12 +37,18 @@ export default function AcceptInvitation() {
         const error = await response.json();
         setError(error.msg);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to validate invitation");
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      validateInvitation();
+    }
+  }, [token, validateInvitation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +91,7 @@ export default function AcceptInvitation() {
         const error = await response.json();
         setError(error.msg);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to create account");
     } finally {
       setSubmitting(false);
@@ -140,7 +140,7 @@ export default function AcceptInvitation() {
             Accept Invitation
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            You've been invited to join <strong>{invitation?.tenantId}</strong>
+            You&apos;ve been invited to join <strong>{invitation?.tenantId}</strong>
           </p>
           <p className="text-center text-sm text-gray-500">
             Invited by {invitation?.invitedBy.name} ({invitation?.invitedBy.email})

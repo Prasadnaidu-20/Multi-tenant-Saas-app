@@ -9,21 +9,17 @@ import {
   Shield, 
   Crown, 
   User, 
-  Settings, 
   Search,
   Filter,
-  MoreVertical,
   UserPlus,
   Send,
   Loader2,
   Check,
   X,
-  Building2,
-  Activity,
-  TrendingUp
+  Building2
 } from "lucide-react";
 
-interface User {
+interface AdminUser {
   _id: string;
   name: string;
   email: string;
@@ -33,14 +29,12 @@ interface User {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [user, setUser] = useState<AdminUser | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [showUpgradeForm, setShowUpgradeForm] = useState(false);
-  const [newPlan, setNewPlan] = useState("Free");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("All");
   const [isVisible, setIsVisible] = useState(false);
@@ -82,7 +76,7 @@ export default function AdminDashboard() {
     }
 
     console.log("Admin user confirmed:", userData);
-    setUser(userData);
+    setUser(userData as unknown as AdminUser);
     fetchUsers();
   }, [router]);
 
@@ -165,31 +159,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const upgradePlan = async (e: React.FormEvent) => {
-    e.preventDefault();   
-    try {
-      const token = getToken();
-      const response = await fetch("http://localhost:5000/api/admin/upgrade", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ plan: newPlan })
-      });
-
-      if (response.ok) {
-        setShowUpgradeForm(false);
-        alert(`Subscription upgraded to ${newPlan}`);
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.msg}`);
-      }
-    } catch (error) {
-      console.error("Error upgrading subscription:", error);
-      alert("Error upgrading subscription");
-    }
-  };
 
   const updateUserToPro = async (userId: string, userName: string) => {
     try {
