@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { getCurrentUser, getToken, logout } from "../../lib/auth";
+import { API_BASE } from "../../lib/api";
 import { 
   Users, 
   Plus, 
@@ -83,7 +84,7 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       const token = getToken();
-      const response = await fetch("http://localhost:5000/api/auth/users", {
+      const response = await fetch(`${API_BASE}/api/auth/users`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -105,7 +106,7 @@ export default function AdminDashboard() {
     
     try {
       const token = getToken();
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,7 +137,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     try {
       const token = getToken();
-      const response = await fetch("http://localhost:5000/api/admin/invite", {
+      const response = await fetch(`${API_BASE}/api/admin/invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +164,7 @@ export default function AdminDashboard() {
   const updateUserToPro = async (userId: string, userName: string) => {
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:5000/api/auth/users/${userId}`, {
+      const response = await fetch(`${API_BASE}/api/auth/users/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

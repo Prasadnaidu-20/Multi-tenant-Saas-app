@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
+import { API_BASE } from "../../lib/api";
 
 interface InvitationData {
   email: string;
@@ -28,7 +29,7 @@ export default function AcceptInvitation() {
 
   const validateInvitation = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/invite/accept/${token}`);
+      const response = await fetch(`${API_BASE}/api/admin/invite/accept/${token}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -67,7 +68,7 @@ export default function AcceptInvitation() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/invite/accept/${token}`, {
+      const response = await fetch(`${API_BASE}/api/admin/invite/accept/${token}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

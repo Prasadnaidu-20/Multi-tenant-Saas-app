@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { API_BASE } from '../../lib/api';
 import { 
   FileText, 
   Plus, 
@@ -80,7 +81,7 @@ const NotesPage = () => {
     if (!token) return;
 
     try {
-      const res = await fetch('http://localhost:5000/api/notes', {
+      const res = await fetch(`${API_BASE}/api/notes`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -106,7 +107,7 @@ const NotesPage = () => {
     if (!token) return;
 
     try {
-      const res = await fetch('http://localhost:5000/api/notes', {
+      const res = await fetch(`${API_BASE}/api/notes`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -137,7 +138,7 @@ const NotesPage = () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/notes/${noteId}`, {
+      const res = await fetch(`${API_BASE}/api/notes/${noteId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -172,7 +173,7 @@ const NotesPage = () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/notes/${editingNote._id}`, {
+      const res = await fetch(`${API_BASE}/api/notes/${editingNote._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

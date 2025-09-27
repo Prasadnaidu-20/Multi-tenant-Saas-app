@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { getCurrentUser, getToken, logout } from "../../lib/auth";
+import { API_BASE } from "../../lib/api";
 import { 
   User, 
   Building2, 
@@ -49,7 +50,7 @@ const Dashboard = () => {
 
   const fetchNoteCount = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/notes', {
+      const res = await fetch(`${API_BASE}/api/notes`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -90,7 +91,7 @@ const Dashboard = () => {
   const handleCreateNote = async () => {
     if (!title || !content) return alert("Please enter title and content");
 
-    const res = await fetch('http://localhost:5000/api/notes', {
+    const res = await fetch(`${API_BASE}/api/notes`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -115,7 +116,7 @@ const Dashboard = () => {
 
     setUpgrading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/upgrade-to-pro', {
+      const res = await fetch(`${API_BASE}/api/auth/upgrade-to-pro`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
